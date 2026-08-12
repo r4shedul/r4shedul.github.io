@@ -33,6 +33,7 @@
       <nav class="nav-links" id="navLinks">
         <a href="#hero" class="nav-link active">Home</a>
         <a href="#experience" class="nav-link">Experience</a>
+        <a href="#education" class="nav-link">Education</a>
         <a href="#about" class="nav-link">About</a>
         <a href="#journey" class="nav-link">Journey</a>
         <a href="#skills" class="nav-link">Skills</a>
@@ -53,6 +54,7 @@
     <div class="mobile-menu" id="mobileMenu">
       <a href="#hero" class="mobile-link">Home</a>
       <a href="#experience" class="mobile-link">Experience</a>
+      <a href="#education" class="mobile-link">Education</a>
       <a href="#about" class="mobile-link">About</a>
       <a href="#journey" class="mobile-link">Journey</a>
       <a href="#skills" class="mobile-link">Skills</a>
@@ -92,8 +94,8 @@
         <div class="hero-visual-stack">
           <div class="current-role-card" id="currentRoleCard">
             <div class="role-header">
-              <span class="role-icon">💼</span>
-              <span class="role-label">Current Position</span>
+              <span class="role-icon">🎓</span>
+              <span class="role-label">Current Status</span>
             </div>
             <div id="currentRoleContent"></div>
           </div>
@@ -116,6 +118,17 @@
           <div class="section-line"></div>
         </div>
         <div class="experience-timeline reveal" id="experienceTimeline"></div>
+      </div>
+    </section>
+
+    <!-- EDUCATION -->
+    <section id="education" class="section">
+      <div class="container">
+        <div class="section-header reveal">
+          <h2 class="section-title">Education <span class="highlight">background</span></h2>
+          <div class="section-line"></div>
+        </div>
+        <div class="experience-timeline reveal" id="educationTimeline"></div>
       </div>
     </section>
 
@@ -287,6 +300,7 @@
         <button class="nav-item active" data-section="dashboard"><i data-lucide="layout-dashboard" class="icon"></i><span>Dashboard</span></button>
         <button class="nav-item" data-section="hero"><i data-lucide="home" class="icon"></i><span>Hero</span></button>
         <button class="nav-item" data-section="experience"><i data-lucide="briefcase" class="icon"></i><span>Experience</span></button>
+        <button class="nav-item" data-section="education"><i data-lucide="graduation-cap" class="icon"></i><span>Education</span></button>
         <button class="nav-item" data-section="about"><i data-lucide="user" class="icon"></i><span>About</span></button>
         <button class="nav-item" data-section="skills"><i data-lucide="code-2" class="icon"></i><span>Skills</span></button>
         <button class="nav-item" data-section="certificates"><i data-lucide="award" class="icon"></i><span>Certificates</span></button>
@@ -373,6 +387,39 @@
             </div>
             <div class="form-group"><label>Description</label><textarea id="expDesc" rows="3" required></textarea></div>
             <div class="form-group"><label><input type="checkbox" id="expCurrent" /> Current role</label></div>
+            <button type="submit" class="btn btn-primary">Save</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Education -->
+      <div class="admin-section" id="adminSectionEducation">
+        <div class="admin-panel">
+          <div class="panel-title">
+            <span>Education</span>
+            <button class="btn btn-primary btn-sm" id="adminAddEduBtn"><i data-lucide="plus" class="icon"></i> Add</button>
+          </div>
+          <div id="adminEduList" class="admin-list"></div>
+        </div>
+        <div class="admin-panel" id="adminEduFormPanel" style="display:none;">
+          <div class="panel-title">
+            <span id="adminEduFormTitle">Add Education</span>
+            <button class="btn btn-outline btn-sm" id="adminEduFormCancel">Cancel</button>
+          </div>
+          <form id="adminEduForm">
+            <input type="hidden" id="eduEditId" />
+            <div class="form-group"><label>Institution</label><input type="text" id="eduInstitution" required /></div>
+            <div class="form-row">
+              <div class="form-group"><label>Degree / Program</label><input type="text" id="eduDegree" required /></div>
+              <div class="form-group"><label>Field of Study</label><input type="text" id="eduField" /></div>
+            </div>
+            <div class="form-group"><label>Location</label><input type="text" id="eduLocation" /></div>
+            <div class="form-row">
+              <div class="form-group"><label>Start Date</label><input type="text" id="eduStart" placeholder="Jan 2022" /></div>
+              <div class="form-group"><label>End Date</label><input type="text" id="eduEnd" placeholder="Present / Dec 2025" /></div>
+            </div>
+            <div class="form-group"><label>Description</label><textarea id="eduDesc" rows="3" required></textarea></div>
+            <div class="form-group"><label><input type="checkbox" id="eduHeroStatus" /> Show as Hero / Current Status</label></div>
             <button type="submit" class="btn btn-primary">Save</button>
           </form>
         </div>
