@@ -14,7 +14,8 @@ const DEFAULT_DATA = {
     profileImage: 'https://ui-avatars.com/api/?name=Rashedul+Islam&size=180&background=0f4c81&color=fff&font-size=0.5',
     fullName: 'Rashedul Islam',
     status: 'Open to opportunities',
-    bio: 'Statistics student with a passion for data analysis, MIS, and visual storytelling.'
+    bio: 'Statistics student with a passion for data analysis, MIS, and visual storytelling.',
+    statusSource: 'education'
   },
   experience: [
     { id: 1, company: 'DataCorp Ltd.', role: 'Data Analyst Intern', location: 'Dhaka, Bangladesh', start: 'Jan 2025', end: 'Present', description: 'Analyzed sales data and built dashboards using Power BI.', current: true },
@@ -100,6 +101,7 @@ const DataManager = {
           this._data = parsed;
           if (!this._data.footer) this._data.footer = { tagline: DEFAULT_DATA.footer.tagline };
           if (!this._data.education) this._data.education = JSON.parse(JSON.stringify(DEFAULT_DATA.education));
+          if (this._data.hero && !this._data.hero.statusSource) this._data.hero.statusSource = 'education';
           return true;
         }
       } catch (err) {
@@ -442,6 +444,31 @@ function renderAll() {
 function renderCurrentRole() {
   const data = DataManager.get();
   const container = document.getElementById('currentRoleContent');
+  const icon = document.getElementById('currentRoleIcon');
+  const source = (data.hero && data.hero.statusSource) || 'education';
+
+  if (source === 'experience') {
+    if (icon) icon.textContent = '💼';
+    const current = data.experience ? data.experience.find(e => e.current) : null;
+    if (current) {
+      container.innerHTML = `
+        <div class="current-role-content">
+          <div class="role-company">${escapeHTML(current.company)}</div>
+          <div class="role-position">${escapeHTML(current.role)}</div>
+          <div class="role-meta">
+            <span>📍 ${escapeHTML(current.location || '')}</span>
+            <span>📅 ${escapeHTML(current.start || '')} — ${escapeHTML(current.end || 'Present')}</span>
+          </div>
+          <div class="role-desc">${escapeHTML(current.description)}</div>
+        </div>
+      `;
+    } else {
+      container.innerHTML = `<div class="no-role-placeholder">No current position set.</div>`;
+    }
+    return;
+  }
+
+  if (icon) icon.textContent = '🎓';
   const current = data.education ? data.education.find(e => e.isHeroStatus) : null;
   if (current) {
     const subtitle = [current.degree, current.field].filter(Boolean).join(' in ');
@@ -927,6 +954,7 @@ function renderAdminHero() {
   document.getElementById('heroFullNameInput').value = data.hero.fullName || '';
   document.getElementById('heroStatusInput').value = data.hero.status || '';
   document.getElementById('heroBioInput').value = data.hero.bio || '';
+  document.getElementById('heroStatusSourceInput').value = data.hero.statusSource || 'education';
   // Clear file input
   document.getElementById('heroProfileImageFile').value = '';
 }
@@ -1742,6 +1770,7 @@ document.addEventListener('DOMContentLoaded', function() {
     data.hero.fullName = document.getElementById('heroFullNameInput').value.trim();
     data.hero.status = document.getElementById('heroStatusInput').value.trim();
     data.hero.bio = document.getElementById('heroBioInput').value.trim();
+    data.hero.statusSource = document.getElementById('heroStatusSourceInput').value;
     const ok = DataManager.set(data);
     renderAdminDashboard();
     renderAll();
@@ -2271,14 +2300,24 @@ document.addEventListener('DOMContentLoaded', function() {
   });
 
   // ---- Initial data load ----
-  // Content loads independently of the admin password (see DataManager.init).
-  // Seed a default admin password of "admin123" only on the very first run.
-  if (!localStorage.getItem('rashed_portfolio_hash')) {
-    localStorage.setItem('rashed_portfolio_hash', hashPassword('admin123'));
-  }
+  // DataManager is initialized first and independently of the admin
+  // password seed below. If the CryptoJS CDN script is blocked (ad
+  // blocker, offline testing, restrictive network), hashPassword() would
+  // throw — previously that happened *before* DataManager.init(), which
+  // silently prevented the whole app (including every admin "Add" button)
+  // from initializing. Content now always loads regardless of that.
   DataManager.init();
-
   renderAll();
+
+  try {
+    // Seed a default admin password of "admin123" only on the very first run.
+    if (!localStorage.getItem('rashed_portfolio_hash')) {
+      localStorage.setItem('rashed_portfolio_hash', hashPassword('admin123'));
+    }
+  } catch (err) {
+    console.error('Could not seed admin password (CryptoJS may have failed to load):', err);
+  }
+
   document.getElementById('year').textContent = new Date().getFullYear();
   if (typeof lucide !== 'undefined') lucide.createIcons();
 
