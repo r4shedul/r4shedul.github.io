@@ -94,7 +94,7 @@
         <div class="hero-visual-stack">
           <div class="current-role-card" id="currentRoleCard">
             <div class="role-header">
-              <span class="role-icon">🎓</span>
+              <span class="role-icon" id="currentRoleIcon">🎓</span>
               <span class="role-label">Current Status</span>
             </div>
             <div id="currentRoleContent"></div>
@@ -102,7 +102,7 @@
           <div class="latest-project-card" id="latestProjectCard">
             <div class="role-header">
               <span class="role-icon">🚀</span>
-              <span class="role-label">Latest Project</span>
+              <span class="role-label">Last Project</span>
             </div>
             <div id="latestProjectContent"></div>
           </div>
@@ -357,6 +357,14 @@
             <div class="form-group"><label>Full Name</label><input type="text" id="heroFullNameInput" /></div>
             <div class="form-group"><label>Status badge</label><input type="text" id="heroStatusInput" /></div>
             <div class="form-group"><label>Bio / Subtitle</label><textarea id="heroBioInput" rows="3"></textarea></div>
+            <div class="form-group">
+              <label>Current Status card shows</label>
+              <select id="heroStatusSourceInput">
+                <option value="education">Current Education</option>
+                <option value="experience">Work Experience</option>
+              </select>
+              <p class="upload-hint">Chooses whether the Hero's "Current Status" card pulls from your Education or Work Experience entries.</p>
+            </div>
             <button type="submit" class="btn btn-primary">Save Hero</button>
           </form>
         </div>
