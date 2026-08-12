@@ -20,6 +20,9 @@ const DEFAULT_DATA = {
     { id: 1, company: 'DataCorp Ltd.', role: 'Data Analyst Intern', location: 'Dhaka, Bangladesh', start: 'Jan 2025', end: 'Present', description: 'Analyzed sales data and built dashboards using Power BI.', current: true },
     { id: 2, company: 'Analytics Hub', role: 'Junior Data Scientist', location: 'Remote', start: 'Aug 2024', end: 'Dec 2024', description: 'Developed predictive models for customer churn.', current: false }
   ],
+  education: [
+    { id: 1, institution: 'Dhaka College', degree: 'Bachelor of Science (Honours)', field: 'Statistics', location: 'Dhaka, Bangladesh', start: '2022', end: 'Present', description: 'Department of Statistics, Dhaka College, affiliated with the University of Dhaka.', isHeroStatus: true }
+  ],
   about: {
     text: "I'm a <strong>Statistics student</strong> from Bangladesh with a deep curiosity for how data shapes decisions. Beyond the classroom, I've dived into <strong>data analysis</strong>, <strong>MIS</strong>, and <strong>visualization</strong> – turning raw numbers into clear, actionable stories.",
     cards: [
@@ -96,6 +99,7 @@ const DataManager = {
         if (parsed && typeof parsed === 'object') {
           this._data = parsed;
           if (!this._data.footer) this._data.footer = { tagline: DEFAULT_DATA.footer.tagline };
+          if (!this._data.education) this._data.education = JSON.parse(JSON.stringify(DEFAULT_DATA.education));
           return true;
         }
       } catch (err) {
@@ -188,7 +192,15 @@ const DataManager = {
     if (idx > -1) { this._data.experience[idx] = { ...this._data.experience[idx], ...data }; return this.save(); }
     return false;
   },
-  deleteExperience(id) { this._data.experience = this._data.experience.filter(e => e.id !== id); return this.save(); }
+  deleteExperience(id) { this._data.experience = this._data.experience.filter(e => e.id !== id); return this.save(); },
+
+  addEducation(edu) { edu.id = edu.id || makeId(); this._data.education.push(edu); return this.save() ? edu : null; },
+  updateEducation(id, data) {
+    const idx = this._data.education.findIndex(e => e.id === id);
+    if (idx > -1) { this._data.education[idx] = { ...this._data.education[idx], ...data }; return this.save(); }
+    return false;
+  },
+  deleteEducation(id) { this._data.education = this._data.education.filter(e => e.id !== id); return this.save(); }
 };
 
 // ============================================================
@@ -356,6 +368,9 @@ function renderAll() {
   // Experience
   renderExperience();
 
+  // Education
+  renderEducation();
+
   // Stats
   const statsGrid = document.getElementById('stats-grid');
   statsGrid.innerHTML = data.stats.map(s => `
@@ -427,12 +442,13 @@ function renderAll() {
 function renderCurrentRole() {
   const data = DataManager.get();
   const container = document.getElementById('currentRoleContent');
-  const current = data.experience ? data.experience.find(e => e.current) : null;
+  const current = data.education ? data.education.find(e => e.isHeroStatus) : null;
   if (current) {
+    const subtitle = [current.degree, current.field].filter(Boolean).join(' in ');
     container.innerHTML = `
       <div class="current-role-content">
-        <div class="role-company">${escapeHTML(current.company)}</div>
-        <div class="role-position">${escapeHTML(current.role)}</div>
+        <div class="role-company">${escapeHTML(current.institution)}</div>
+        <div class="role-position">${escapeHTML(subtitle)}</div>
         <div class="role-meta">
           <span>📍 ${escapeHTML(current.location || '')}</span>
           <span>📅 ${escapeHTML(current.start || '')} — ${escapeHTML(current.end || 'Present')}</span>
@@ -441,7 +457,7 @@ function renderCurrentRole() {
       </div>
     `;
   } else {
-    container.innerHTML = `<div class="no-role-placeholder">No current position set.</div>`;
+    container.innerHTML = `<div class="no-role-placeholder">No current status set.</div>`;
   }
 }
 
@@ -502,6 +518,31 @@ function renderExperience() {
           <span>📅 ${escapeHTML(exp.start || '')} — ${escapeHTML(exp.end || 'Present')}</span>
         </div>
         <div class="exp-desc">${escapeHTML(exp.description)}</div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderEducation() {
+  const data = DataManager.get();
+  const container = document.getElementById('educationTimeline');
+  if (!container) return;
+  const education = data.education || [];
+  if (!education.length) {
+    container.innerHTML = '<p style="text-align:center;color:var(--text-muted);">No education added yet.</p>';
+    return;
+  }
+  container.innerHTML = education.map(edu => `
+    <div class="exp-item">
+      <div class="exp-dot ${edu.isHeroStatus ? 'current' : ''}"></div>
+      <div class="exp-content">
+        <div class="exp-company">${escapeHTML(edu.institution)}</div>
+        <div class="exp-role">${escapeHTML([edu.degree, edu.field].filter(Boolean).join(' in '))}</div>
+        <div class="exp-meta">
+          <span>📍 ${escapeHTML(edu.location || '')}</span>
+          <span>📅 ${escapeHTML(edu.start || '')} — ${escapeHTML(edu.end || 'Present')}</span>
+        </div>
+        <div class="exp-desc">${escapeHTML(edu.description)}</div>
       </div>
     </div>
   `).join('');
@@ -875,6 +916,7 @@ function renderAdminDashboard() {
   renderAdminResume();
   renderAdminFooter();
   renderAdminExperience();
+  renderAdminEducation();
   populateCategorySelect();
   if (typeof lucide !== 'undefined') lucide.createIcons();
 }
@@ -902,6 +944,25 @@ function renderAdminExperience() {
       <div class="item-actions">
         <button class="edit-btn" onclick="editExperience(${exp.id})" aria-label="Edit experience: ${escapeHTML(exp.company)}">Edit</button>
         <button class="delete-btn" onclick="deleteExperience(${exp.id})" aria-label="Delete experience: ${escapeHTML(exp.company)}">Delete</button>
+      </div>
+    </div>
+  `).join('');
+}
+
+function renderAdminEducation() {
+  const data = DataManager.get();
+  const list = document.getElementById('adminEduList');
+  const education = data.education || [];
+  if (!education.length) {
+    list.innerHTML = '<div class="admin-empty"><p>No education entries.</p></div>';
+    return;
+  }
+  list.innerHTML = education.map(edu => `
+    <div class="admin-list-item">
+      <div class="item-info"><h4>${escapeHTML(edu.institution)}${edu.isHeroStatus ? ' ⭐' : ''}</h4><p>${escapeHTML([edu.degree, edu.field].filter(Boolean).join(' in '))} • ${escapeHTML(edu.start || '')} — ${escapeHTML(edu.end || 'Present')}</p></div>
+      <div class="item-actions">
+        <button class="edit-btn" onclick="editEducation(${edu.id})" aria-label="Edit education: ${escapeHTML(edu.institution)}">Edit</button>
+        <button class="delete-btn" onclick="deleteEducation(${edu.id})" aria-label="Delete education: ${escapeHTML(edu.institution)}">Delete</button>
       </div>
     </div>
   `).join('');
@@ -1270,6 +1331,23 @@ window.deleteExperience = function(id) {
   });
 };
 
+window.deleteEducation = function(id) {
+  const data = DataManager.get();
+  const edu = data.education.find(e => e.id === id);
+  if (!edu) return;
+  if (!confirm(`Delete education entry at "${edu.institution}"?`)) return;
+  const undoItem = { type: 'education', data: edu };
+  const ok = DataManager.deleteEducation(id);
+  renderAdminDashboard();
+  renderAll();
+  if (!ok) { showNotice(`Failed to delete: ${DataManager._lastError || 'unknown error'}`, 'error'); return; }
+  showUndoToast(`"${edu.institution}" removed`, () => {
+    DataManager.addEducation(undoItem.data);
+    renderAdminDashboard();
+    renderAll();
+  });
+};
+
 window.editProject = function(id) {
   const data = DataManager.get();
   const p = data.projects.find(x => x.id === id);
@@ -1350,6 +1428,24 @@ window.editExperience = function(id) {
   document.getElementById('adminExpFormPanel').scrollIntoView({ behavior: 'smooth' });
 };
 
+window.editEducation = function(id) {
+  const data = DataManager.get();
+  const edu = data.education.find(x => x.id === id);
+  if (!edu) return;
+  document.getElementById('eduEditId').value = id;
+  document.getElementById('eduInstitution').value = edu.institution;
+  document.getElementById('eduDegree').value = edu.degree;
+  document.getElementById('eduField').value = edu.field || '';
+  document.getElementById('eduLocation').value = edu.location || '';
+  document.getElementById('eduStart').value = edu.start || '';
+  document.getElementById('eduEnd').value = edu.end || '';
+  document.getElementById('eduDesc').value = edu.description;
+  document.getElementById('eduHeroStatus').checked = edu.isHeroStatus || false;
+  document.getElementById('adminEduFormTitle').textContent = 'Edit Education';
+  document.getElementById('adminEduFormPanel').style.display = 'block';
+  document.getElementById('adminEduFormPanel').scrollIntoView({ behavior: 'smooth' });
+};
+
 window.switchAdminSection = function(section) {
   document.querySelectorAll('.admin-section').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('.admin-nav .nav-item').forEach(el => el.classList.remove('active'));
@@ -1357,10 +1453,10 @@ window.switchAdminSection = function(section) {
   if (target) target.classList.add('active');
   const navBtn = document.querySelector(`.admin-nav .nav-item[data-section="${section}"]`);
   if (navBtn) navBtn.classList.add('active');
-  const titles = { dashboard: 'Dashboard', hero: 'Hero', experience: 'Experience', about: 'About', skills: 'Skills', certificates: 'Certificates', projects: 'Projects', timeline: 'Timeline', stats: 'Stats', social: 'Social Links', contact: 'Contact', resume: 'Resume', footer: 'Footer', settings: 'Settings' };
+  const titles = { dashboard: 'Dashboard', hero: 'Hero', experience: 'Experience', education: 'Education', about: 'About', skills: 'Skills', certificates: 'Certificates', projects: 'Projects', timeline: 'Timeline', stats: 'Stats', social: 'Social Links', contact: 'Contact', resume: 'Resume', footer: 'Footer', settings: 'Settings' };
   document.getElementById('adminPageTitle').textContent = titles[section] || 'Dashboard';
   // Hide all floating panels
-  ['adminProjectFormPanel','adminTimelineFormPanel','adminSocialFormPanel','adminCertFormPanel','adminExpFormPanel'].forEach(id => {
+  ['adminProjectFormPanel','adminTimelineFormPanel','adminSocialFormPanel','adminCertFormPanel','adminExpFormPanel','adminEduFormPanel'].forEach(id => {
     document.getElementById(id).style.display = 'none';
   });
   document.getElementById('inlineAddCategoryRow').style.display = 'none';
@@ -1375,6 +1471,7 @@ window.switchAdminSection = function(section) {
   if (section === 'resume') renderAdminResume();
   if (section === 'footer') renderAdminFooter();
   if (section === 'experience') renderAdminExperience();
+  if (section === 'education') renderAdminEducation();
   if (section === 'dashboard') renderAdminDashboard();
   if (typeof lucide !== 'undefined') lucide.createIcons();
 };
@@ -1687,6 +1784,52 @@ document.addEventListener('DOMContentLoaded', function() {
     renderAdminDashboard();
     renderAll();
     notifySaveResult(ok, 'Experience entry');
+  });
+
+  // Education
+  document.getElementById('adminAddEduBtn').addEventListener('click', () => {
+    document.getElementById('eduEditId').value = '';
+    document.getElementById('eduInstitution').value = '';
+    document.getElementById('eduDegree').value = '';
+    document.getElementById('eduField').value = '';
+    document.getElementById('eduLocation').value = '';
+    document.getElementById('eduStart').value = '';
+    document.getElementById('eduEnd').value = '';
+    document.getElementById('eduDesc').value = '';
+    document.getElementById('eduHeroStatus').checked = false;
+    document.getElementById('adminEduFormTitle').textContent = 'Add Education';
+    document.getElementById('adminEduFormPanel').style.display = 'block';
+    document.getElementById('adminEduFormPanel').scrollIntoView({ behavior: 'smooth' });
+  });
+  document.getElementById('adminEduFormCancel').addEventListener('click', () => {
+    document.getElementById('adminEduFormPanel').style.display = 'none';
+  });
+  document.getElementById('adminEduForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (guardDoubleSubmit(e.target)) return;
+    const idRaw = document.getElementById('eduEditId').value;
+    const id = idRaw ? parseInt(idRaw) : null;
+    const institution = document.getElementById('eduInstitution').value.trim();
+    const degree = document.getElementById('eduDegree').value.trim();
+    const field = document.getElementById('eduField').value.trim();
+    const location = document.getElementById('eduLocation').value.trim();
+    const start = document.getElementById('eduStart').value.trim();
+    const end = document.getElementById('eduEnd').value.trim();
+    const description = document.getElementById('eduDesc').value.trim();
+    const isHeroStatus = document.getElementById('eduHeroStatus').checked;
+    if (!institution || !degree || !description) { showNotice('Institution, degree, and description are required.', 'error'); return; }
+    // Only one education entry can be shown in the Hero — unset any other
+    // entry currently holding that spot before saving this one.
+    if (isHeroStatus) {
+      const data = DataManager.get();
+      (data.education || []).forEach(edu => { edu.isHeroStatus = false; });
+    }
+    const ok = id ? DataManager.updateEducation(id, { institution, degree, field, location, start, end, description, isHeroStatus })
+                  : !!DataManager.addEducation({ institution, degree, field, location, start, end, description, isHeroStatus });
+    document.getElementById('adminEduFormPanel').style.display = 'none';
+    renderAdminDashboard();
+    renderAll();
+    notifySaveResult(ok, 'Education entry');
   });
 
   // About Text
